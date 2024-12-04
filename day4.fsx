@@ -3,7 +3,7 @@ let parse fileName =
     |> Seq.map Seq.toArray
     |> array2D
 
-let generateIndexesStarting (startX, startY) =
+let patternSun (startX, startY) =
     let deltas dX dY =
         [0..3]
         |> List.map (fun i -> (startX + (dX * i), startY + (dY * i)))
@@ -21,15 +21,13 @@ let validIndex arr (x, y) =
     && y >= 0
     && y < Array2D.length2 arr
 
-let isXmas arr (indexes: (int * int) seq) =
-    let word =
-        indexes
-        |> Seq.map (fun (x, y) -> Array2D.get arr x y)
-        |> Seq.map string
-        |> String.concat ""
-    word = "XMAS"
+let accessWord arr (indexes: (int * int) seq) =
+    indexes
+    |> Seq.map (fun (x, y) -> Array2D.get arr x y)
+    |> Seq.map string
+    |> String.concat ""
 
-let part1 arr =
+let countXmas indexesPattern expectedWord arr =
     let startingIndices =
         seq {
             for x in 0 .. ((Array2D.length1 arr) - 1) do
@@ -40,12 +38,28 @@ let part1 arr =
     let validIndexSeq = Seq.forall (validIndex arr)
 
     startingIndices
-    |> Seq.collect generateIndexesStarting
+    |> Seq.collect indexesPattern
     |> Seq.filter validIndexSeq
-    |> Seq.filter (isXmas arr)
+    |> Seq.map (accessWord arr)
+    |> Seq.filter ((=) expectedWord)
     |> Seq.length
+
+let part1 = countXmas patternSun "XMAS"
+
+let patternX (startX, startY) =
+    let mkDiag = List.map (fun (dX, dY) -> (startX + dX, startY + dY))
+    let diag1 = mkDiag [(-1, -1); (0, 0); (1, 1)]
+    let diag2 = mkDiag [(-1, 1); (0, 0); (1, -1)]
+    [
+        diag1            @ diag2;
+        (List.rev diag1) @ diag2;
+        diag1            @ (List.rev diag2);
+        (List.rev diag1) @ (List.rev diag2)
+    ]
+
+let part2 arr = countXmas patternX "MASMAS" arr
 
 printfn "%A" (part1 (parse "data/day4.test.txt"))
 printfn "%A" (part1 (parse "data/day4.data.txt"))
-// printfn "%A" (part2 (parseCorrupted "data/day4.test2.txt"))
-// printfn "%A" (part2 (parseCorrupted "data/day4.data.txt"))
+printfn "%A" (part2 (parse "data/day4.test.txt"))
+printfn "%A" (part2 (parse "data/day4.data.txt"))
