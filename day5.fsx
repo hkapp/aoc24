@@ -56,19 +56,16 @@ let rec guidedPermutations ordRules arr =
     if Array.length arr = 1 then
         seq { arr }
     else
-        [0..((Array.length arr)-1)]
-        |> Seq.collect (fun i ->
-            guidedPermutations ordRules (Array.removeAt i arr)
-            |> Seq.map (fun p -> Array.insertAt 0 arr[i] p)
+        guidedPermutations ordRules (Array.tail arr)
+        |> Seq.collect (fun p ->
+            [0..(Array.length p)]
+            |> Seq.map (fun i -> Array.insertAt i (Array.head arr) p)
             |> Seq.filter (correctlyOrdered ordRules)
         )
 
 let orderCorrectly ordRules update =
     guidedPermutations ordRules update
     |> Seq.exactlyOne
-    // permutations update
-    // |> Seq.map Array.ofList
-    // |> Seq.find (correctlyOrdered ordRules)
 
 let part2 (ordRules, updates) =
     updates
