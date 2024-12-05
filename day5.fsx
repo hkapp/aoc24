@@ -41,20 +41,34 @@ let part1 (ordRules, updates) =
     |> Seq.map middle
     |> Seq.sum
 
-let rec permutations arr =
+// May be useful for another day
+// let rec permutations arr =
+//     if Array.length arr = 1 then
+//         seq { List.ofArray arr }
+//     else
+//         [0..((Array.length arr)-1)]
+//         |> Seq.collect (fun i ->
+//             permutations (Array.removeAt i arr)
+//             |> Seq.map (fun p -> arr[i] :: p)
+//         )
+
+let rec guidedPermutations ordRules arr =
     if Array.length arr = 1 then
-        seq { List.ofArray arr }
+        seq { arr }
     else
         [0..((Array.length arr)-1)]
         |> Seq.collect (fun i ->
-            permutations (Array.removeAt i arr)
-            |> Seq.map (fun p -> arr[i] :: p)
+            guidedPermutations ordRules (Array.removeAt i arr)
+            |> Seq.map (fun p -> Array.insertAt 0 arr[i] p)
+            |> Seq.filter (correctlyOrdered ordRules)
         )
 
 let orderCorrectly ordRules update =
-    permutations update
-    |> Seq.map Array.ofList
-    |> Seq.find (correctlyOrdered ordRules)
+    guidedPermutations ordRules update
+    |> Seq.exactlyOne
+    // permutations update
+    // |> Seq.map Array.ofList
+    // |> Seq.find (correctlyOrdered ordRules)
 
 let part2 (ordRules, updates) =
     updates
