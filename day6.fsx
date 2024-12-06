@@ -82,7 +82,35 @@ let part1 grid =
     |> Set.ofSeq
     |> Set.count
 
+let seqLenAtLeast n s =
+    Seq.indexed s
+    |> Seq.map fst
+    |> Seq.exists ((=) n)
+
+let loops grid startState =
+    let maxSimulationLen = 4 * (Array2D.length1 grid) * (Array2D.length2 grid) + 1
+    seqLenAtLeast maxSimulationLen  <| simulateGuard grid startState
+
+let part2 grid =
+    let startState = findGuard grid
+    let possibleRoadBlocks =
+        grid
+        |> arr2DEnumerate
+        |> Seq.filter (fun (pos, c) -> c = '.')
+        |> Seq.map fst
+
+    possibleRoadBlocks
+    |> Seq.filter (fun (i, j) ->
+        // Warning! mutation
+        grid[i, j] <- '#'
+        let b = loops grid startState
+        // Reset the mutation
+        grid[i, j] <- '.'
+        b
+    )
+    |> Seq.length
+
 printfn "%A" (part1 <| parse "data/day6.test.txt")
 printfn "%A" (part1 <| parse "data/day6.data.txt")
-// printfn "%A" (part2 <| parse "data/day4.test.txt")
-// printfn "%A" (part2 <| parse "data/day4.data.txt")
+printfn "%A" (part2 <| parse "data/day6.test.txt")
+printfn "%A" (part2 <| parse "data/day6.data.txt")
