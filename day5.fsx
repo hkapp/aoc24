@@ -1,3 +1,5 @@
+#load "arrayutils.fsx"
+
 let splitWhere predicate s =
     let idx = Seq.findIndex predicate s
     (Seq.take idx s, Seq.skip (idx+1) s)
@@ -27,8 +29,8 @@ let parse fileName =
 
 let correctlyOrdered ordRules update =
     seq {
-        for i in [0..((Array.length update)-1)] do
-        for j in [(i+1)..((Array.length update)-1)] do
+        for i in [0..(ArrayUtils.maxIndex update)] do
+        for j in [(i+1)..(ArrayUtils.maxIndex update)] do
         yield (update[i], update[j])
     }
     |> Seq.forall (fun (a, b) -> not (Set.contains (b, a) ordRules))

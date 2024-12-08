@@ -1,7 +1,4 @@
-let parse fileName =
-    System.IO.File.ReadLines fileName
-    |> Seq.map Seq.toArray
-    |> array2D
+#load "grid.fsx"
 
 let patternSun (startX, startY) =
     let deltas dX dY =
@@ -15,12 +12,6 @@ let patternSun (startX, startY) =
         then yield deltas dX dY
     }
 
-let validIndex arr (x, y) =
-    x >= 0
-    && x < Array2D.length1 arr
-    && y >= 0
-    && y < Array2D.length2 arr
-
 let accessWord arr (indexes: (int * int) seq) =
     indexes
     |> Seq.map (fun (x, y) -> Array2D.get arr x y)
@@ -28,16 +19,9 @@ let accessWord arr (indexes: (int * int) seq) =
     |> String.concat ""
 
 let countXmas indexesPattern expectedWord arr =
-    let startingIndices =
-        seq {
-            for x in 0 .. ((Array2D.length1 arr) - 1) do
-            for y in 0 .. ((Array2D.length2 arr) - 1) do
-            yield (x, y)
-        }
+    let validIndexSeq = Seq.forall (Grid.withinBounds arr)
 
-    let validIndexSeq = Seq.forall (validIndex arr)
-
-    startingIndices
+    Grid.indexes arr
     |> Seq.collect indexesPattern
     |> Seq.filter validIndexSeq
     |> Seq.map (accessWord arr)
@@ -59,7 +43,7 @@ let patternX (startX, startY) =
 
 let part2 arr = countXmas patternX "MASMAS" arr
 
-printfn "%A" (part1 (parse "data/day4.test.txt"))
-printfn "%A" (part1 (parse "data/day4.data.txt"))
-printfn "%A" (part2 (parse "data/day4.test.txt"))
-printfn "%A" (part2 (parse "data/day4.data.txt"))
+printfn "%A" (part1 <| Grid.parse "data/day4.test.txt")
+printfn "%A" (part1 <| Grid.parse "data/day4.data.txt")
+printfn "%A" (part2 <| Grid.parse "data/day4.test.txt")
+printfn "%A" (part2 <| Grid.parse "data/day4.data.txt")
