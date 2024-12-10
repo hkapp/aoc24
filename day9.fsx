@@ -1,8 +1,10 @@
+#load "utils.fsx"
+
 let parse fileName =
     System.IO.File.ReadAllText fileName
     |> Seq.mapi (
         fun i c ->
-            let len = int c - int '0'
+            let len = Utils.intFromChar c
             if i % 2 = 0 then
                 // File
                 let fileId = i / 2
