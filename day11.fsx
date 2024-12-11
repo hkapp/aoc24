@@ -1,3 +1,5 @@
+open System.Collections.Generic
+
 let parse fileName =
     let s = System.IO.File.ReadAllText fileName
     s.Split(' ')
@@ -41,7 +43,28 @@ let blinkNTimes n stones =
 
 let part1 = blinkNTimes 25
 
-let part2 = blinkNTimes 35
+let rec countNoBlowout (fastMap: Dictionary<(uint64 * int), uint64>) nBlinks stoneValue =
+    if nBlinks = 0 then
+        1UL
+    else
+        let key = (stoneValue, nBlinks)
+        match fastMap.TryGetValue key with
+        | (true, c) -> c
+        | (false, _) ->
+            let c =
+                changeStone stoneValue
+                |> Seq.map (countNoBlowout fastMap (nBlinks-1))
+                |> Seq.sum
+            fastMap.Add(key, c)
+            c
+
+let blinkNTimesNoBlowout n init =
+    let mutMap = new Dictionary<_,_>()
+    init
+    |> Seq.map (countNoBlowout mutMap n)
+    |> Seq.sum
+
+let part2 = blinkNTimesNoBlowout 75
 
 printfn "%A" (part1 <| parse "data/day11.test.txt")
 printfn "%A" (part1 <| parse "data/day11.data.txt")
