@@ -4,17 +4,17 @@ open System.Text.RegularExpressions
 let parseButton s =
     let regex = Regex "Button .: X\+(\d+), Y\+(\d+)"
     let matches = regex.Match s
-    (uint64 matches.Groups[1].Value, uint64 matches.Groups[2].Value)
+    (int64 matches.Groups[1].Value, int64 matches.Groups[2].Value)
 
 let parsePrize s =
     let regex = Regex "Prize: X=(\d+), Y=(\d+)"
     let matches = regex.Match s
-    (uint64 matches.Groups[1].Value, uint64 matches.Groups[2].Value)
+    (int64 matches.Groups[1].Value, int64 matches.Groups[2].Value)
 
 type Equation = {
-    ButtonA: uint64 * uint64
-    ButtonB: uint64 * uint64
-    Prize:   uint64 * uint64
+    ButtonA: int64 * int64
+    ButtonB: int64 * int64
+    Prize:   int64 * int64
 }
 
 let parseGroup arr =
@@ -23,6 +23,7 @@ let parseGroup arr =
     let p = parsePrize <| Array.get arr 2
     { ButtonA = a ; ButtonB = b ; Prize = p }
 
+// TODO move to Utils
 let nonOverlappingWindows n s =
     Seq.windowed n s
     |> Seq.mapi (fun i v -> (i % n, v))
@@ -35,57 +36,44 @@ let parse fileName =
     |> nonOverlappingWindows 3
     |> Seq.map parseGroup
 
-let solveB eq na =
-    let solveSide f =
-        let rem = (f eq.Prize) - (na * (f eq.ButtonA))
-        if rem % (f eq.ButtonB) = 0UL then
-            Some (rem / (f eq.ButtonB))
-        else
-            None
+let optDiv p q =
+    if (p % q) = 0L then
+        Some (p / q)
+    else
+        None
 
-    match (solveSide fst, solveSide snd) with
-    | (Some x, Some y) when x = y -> Some x
-    | _ -> None
+let solveEq eq =
+    let (a1, a2) = eq.ButtonA
+    let (b1, b2) = eq.ButtonB
+    let (p1, p2) = eq.Prize
 
-let solveEq startingAs eq =
-    startingAs eq
-    |> Seq.filter (fun a -> a * (fst eq.ButtonA) <= (fst eq.Prize))
-    |> Seq.choose (fun a ->
-        solveB eq a
-        |> Option.map (fun b -> (a, b)))
+    optDiv
+        ((a1 * p2) - (a2 * p1))
+        ((a1 * b2) - (b1 * a2))
+    |> Option.bind (fun b ->
+        optDiv
+            (p1 - (b1 * b))
+            a1
+        |> Option.map (fun a -> (a, b)))
 
-let cost (a, b) = 3UL * a + b
+let cost (a, b) = 3L * a + b
 
-let clawMachine startingAs eqs =
+let clawMachine eqs =
     eqs
-    |> Seq.choose (fun eq ->
-        let solutions = solveEq startingAs eq
-        if Seq.isEmpty solutions then
-            None
-        else
-            Some (Seq.minBy cost solutions))
+    |> Seq.choose solveEq
     |> Seq.map cost
     |> Seq.sum
 
-let part1 = clawMachine (fun _ -> [0UL..100UL])
+let part1 = clawMachine
 
-let unboundStartingAs eq =
-    let notTooBig f a =
-        a * (f eq.ButtonA) <= (f eq.Prize)
-    Utils.integers_u64
-    |> Seq.takeWhile (fun a -> (notTooBig fst a) && (notTooBig snd a))
-
+// TODO move to Utils
 let bimap f (a, b) = (f a, f b)
 
 let part2 eqs =
     eqs
-    |> Seq.map (fun eq -> { eq with Prize = bimap ((+) 10000000000000UL) eq.Prize } )
-    |> Seq.mapi (fun i eq ->
-        printfn "Solving Eq#%i" i
-        eq)
-    |> clawMachine unboundStartingAs
+    |> Seq.map (fun eq -> { eq with Prize = bimap ((+) 10000000000000L) eq.Prize } )
+    |> clawMachine
 
 printfn "%A" (part1 <| parse "data/day13.test.txt")
 printfn "%A" (part1 <| parse "data/day13.data.txt")
-printfn "%A" (part2 <| parse "data/day13.test.txt")
-// printfn "%A" (part2 <| parse "data/day13.data.txt")
+printfn "%A" (part2 <| parse "data/day13.data.txt")
