@@ -11,7 +11,4 @@ let integers =
         (fun x -> Some (x, x+1))
         0
 
-let integers_u64 =
-    Seq.unfold
-        (fun x -> Some (x, x+1UL))
-        0UL
+let bimap f (a, b) = (f a, f b)

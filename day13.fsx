@@ -1,4 +1,5 @@
 #load "utils.fsx"
+#load "sequtils.fsx"
 open System.Text.RegularExpressions
 
 let parseButton s =
@@ -23,17 +24,10 @@ let parseGroup arr =
     let p = parsePrize <| Array.get arr 2
     { ButtonA = a ; ButtonB = b ; Prize = p }
 
-// TODO move to Utils
-let nonOverlappingWindows n s =
-    Seq.windowed n s
-    |> Seq.mapi (fun i v -> (i % n, v))
-    |> Seq.filter (fun (i, v) -> i = 0)
-    |> Seq.map snd
-
 let parse fileName =
     System.IO.File.ReadLines fileName
     |> Seq.filter ((<>) "")
-    |> nonOverlappingWindows 3
+    |> SeqUtils.nonOverlappingWindows 3
     |> Seq.map parseGroup
 
 let optDiv p q =
@@ -66,12 +60,9 @@ let clawMachine eqs =
 
 let part1 = clawMachine
 
-// TODO move to Utils
-let bimap f (a, b) = (f a, f b)
-
 let part2 eqs =
     eqs
-    |> Seq.map (fun eq -> { eq with Prize = bimap ((+) 10000000000000L) eq.Prize } )
+    |> Seq.map (fun eq -> { eq with Prize = Utils.bimap ((+) 10000000000000L) eq.Prize } )
     |> clawMachine
 
 printfn "%A" (part1 <| parse "data/day13.test.txt")
