@@ -1,17 +1,10 @@
 #load "grid.fsx"
 #load "utils.fsx"
+#load "algos.fsx"
 
 let parse fileName =
     Grid.parse fileName
     |> Array2D.map Utils.intFromChar
-
-// Note: this BFS only works assuming that the `neighbours` function
-// won't produce values already visited
-let rec bfs (neighbours: 'State -> 'State seq) (startState: 'State) =
-    Seq.append
-        (seq { startState })
-        (neighbours startState
-        |> Seq.collect (bfs neighbours))
 
 let walkable grid currPos =
     let currHeight = Grid.get grid currPos
@@ -19,7 +12,7 @@ let walkable grid currPos =
     |> Seq.filter (fun newPos -> (Grid.get grid newPos) = (currHeight + 1))
 
 let hike grid startPos =
-    bfs (walkable grid) startPos
+    Algorithms.bfs (walkable grid) startPos
 
 let trailScore grid trailhead =
     hike grid trailhead
