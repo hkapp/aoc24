@@ -1,5 +1,6 @@
 #load "grid.fsx"
 #load "arrayutils.fsx"
+#load "utils.fsx"
 
 let antennas grid =
     Grid.enumerate grid
@@ -38,14 +39,9 @@ let countTargets target grid =
 
 let part1 = countTargets antinodes
 
-let allIntegers =
-    Seq.unfold
-        (fun x -> Some (x, x+1))
-        0
-
 let generate startPos freq =
     let f g i = (g startPos) + i * (g freq)
-    allIntegers
+    Utils.integers
     |> Seq.map (fun i -> (f fst i, f snd i))
 
 let harmonics grid (u, v) =
