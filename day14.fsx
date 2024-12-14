@@ -57,12 +57,21 @@ let satisfies world robots nSteps req =
     robots
     |> Seq.exists (fun r -> (simulate world nSteps r) = req)
 
-let countWhere world robots reqs =
+let simulateAll world robots =
     [0..((fst world) * (snd world))]
-    |> Seq.filter (fun i ->
+    |> Seq.map (fun i ->
         printf "%i " i
-        reqs
-        |> Seq.forall (satisfies world robots i))
+        robots
+        |> Seq.map (simulate world i))
+
+let findWhere world robots predicate =
+    simulateAll world robots
+    |> SeqUtils.zipWithIndex
+    |> Seq.choose (fun (i, sim) ->
+        if predicate (Set.ofSeq sim) then
+            Some i
+        else
+            None)
 
 let display world robots nSteps =
     let state =
@@ -76,6 +85,11 @@ let display world robots nSteps =
             else
                 printf " "
         printfn ""
+
+let symmetrical world s =
+    let symm (x, y) = ((fst world) - x - 1, y)
+    s
+    |> Set.forall (fun p -> Set.contains (symm p) s)
 
 (*
   x->
@@ -92,11 +106,14 @@ let part2 world robots =
     let topLeft = (centerWidth - 1, top + 1)
     let topRight = (centerWidth + 1, top + 1)
     let bottomCenter2 = (centerWidth, bottom - 1)
-    countWhere world robots [bottomCenter; topCenter]
+    findWhere world robots (symmetrical world)
     |> Seq.iter (display world robots)
 
 let testWorld = (11, 7)
 printfn "%A" (part1 testWorld <| parse "data/day14.test.txt")
 let realWorld = (101, 103)
 printfn "%A" (part1 realWorld <| parse "data/day14.data.txt")
+printfn "%A" (symmetrical (3, 3) (Set.ofList [(1, 0); (1, 2); (0, 1); (2, 1)]))
+printfn "%A" (symmetrical (3, 3) (Set.ofList [(1, 0); (1, 2); (0, 1)]))
+printfn "%A" (symmetrical (3, 3) (Set.ofList [(1, 0); (1, 2); (0, 1); (2, 1); (1, 1)]))
 printfn "%A" (part2 realWorld <| parse "data/day14.data.txt")
