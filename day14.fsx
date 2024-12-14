@@ -53,10 +53,6 @@ let part1 world robots =
     |> Seq.map (fun (q, s) -> Seq.length s)
     |> SeqUtils.product
 
-let satisfies world robots nSteps req =
-    robots
-    |> Seq.exists (fun r -> (simulate world nSteps r) = req)
-
 let simulateAll world robots =
     [0..((fst world) * (snd world))]
     |> Seq.map (fun i ->
@@ -74,22 +70,31 @@ let findWhere world robots predicate =
             None)
 
 let display world robots nSteps =
+    let sep () =
+        for j in 0 .. ((fst world) - 1) do
+            printf "-"
+        printfn ""
     let state =
         robots
         |> Seq.map (simulate world nSteps)
         |> Set.ofSeq
+    sep ()
     for i in 0 .. ((snd world) - 1) do
         for j in 0 .. ((fst world) - 1) do
-            if Set.contains (i, j) state then
+            if Set.contains (j, i) state then
                 printf "#"
             else
                 printf " "
         printfn ""
+    sep ()
 
-let symmetrical world s =
-    let symm (x, y) = ((fst world) - x - 1, y)
+let matchFrame s =
     s
-    |> Set.forall (fun p -> Set.contains (symm p) s)
+    |> Set.exists (fun p ->
+        [0..10]
+        |> List.forall (fun i ->
+            (Set.contains (fst p, (snd p) + i) s) &&
+            (Set.contains ((fst p) + i, snd p) s)))
 
 (*
   x->
@@ -98,22 +103,14 @@ y
 v
 *)
 let part2 world robots =
-    let centerWidth = (fst world) / 2
-    let bottom = (snd world) - 1
-    let bottomCenter = (centerWidth, bottom)
-    let top = 0
-    let topCenter = (centerWidth, top)
-    let topLeft = (centerWidth - 1, top + 1)
-    let topRight = (centerWidth + 1, top + 1)
-    let bottomCenter2 = (centerWidth, bottom - 1)
-    findWhere world robots (symmetrical world)
-    |> Seq.iter (display world robots)
+    let res =
+        findWhere world robots matchFrame
+        |> Seq.head
+    display world robots res
+    res
 
 let testWorld = (11, 7)
 printfn "%A" (part1 testWorld <| parse "data/day14.test.txt")
 let realWorld = (101, 103)
 printfn "%A" (part1 realWorld <| parse "data/day14.data.txt")
-printfn "%A" (symmetrical (3, 3) (Set.ofList [(1, 0); (1, 2); (0, 1); (2, 1)]))
-printfn "%A" (symmetrical (3, 3) (Set.ofList [(1, 0); (1, 2); (0, 1)]))
-printfn "%A" (symmetrical (3, 3) (Set.ofList [(1, 0); (1, 2); (0, 1); (2, 1); (1, 1)]))
 printfn "%A" (part2 realWorld <| parse "data/day14.data.txt")
