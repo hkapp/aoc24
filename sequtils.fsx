@@ -13,3 +13,5 @@ let filteri f s =
 let nonOverlappingWindows n s =
     Seq.windowed n s
     |> filteri (fun i v -> (i % n) = 0)
+
+let product s = Seq.fold (*) 1 s
