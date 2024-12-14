@@ -53,8 +53,50 @@ let part1 world robots =
     |> Seq.map (fun (q, s) -> Seq.length s)
     |> SeqUtils.product
 
+let satisfies world robots nSteps req =
+    robots
+    |> Seq.exists (fun r -> (simulate world nSteps r) = req)
+
+let countWhere world robots reqs =
+    [0..((fst world) * (snd world))]
+    |> Seq.filter (fun i ->
+        printf "%i " i
+        reqs
+        |> Seq.forall (satisfies world robots i))
+
+let display world robots nSteps =
+    let state =
+        robots
+        |> Seq.map (simulate world nSteps)
+        |> Set.ofSeq
+    for i in 0 .. ((snd world) - 1) do
+        for j in 0 .. ((fst world) - 1) do
+            if Set.contains (i, j) state then
+                printf "#"
+            else
+                printf " "
+        printfn ""
+
+(*
+  x->
+y
+|
+v
+*)
+let part2 world robots =
+    let centerWidth = (fst world) / 2
+    let bottom = (snd world) - 1
+    let bottomCenter = (centerWidth, bottom)
+    let top = 0
+    let topCenter = (centerWidth, top)
+    let topLeft = (centerWidth - 1, top + 1)
+    let topRight = (centerWidth + 1, top + 1)
+    let bottomCenter2 = (centerWidth, bottom - 1)
+    countWhere world robots [bottomCenter; topCenter]
+    |> Seq.iter (display world robots)
+
 let testWorld = (11, 7)
 printfn "%A" (part1 testWorld <| parse "data/day14.test.txt")
 let realWorld = (101, 103)
 printfn "%A" (part1 realWorld <| parse "data/day14.data.txt")
-// printfn "%A" (part2 <| parse "data/day14.data.txt")
+printfn "%A" (part2 realWorld <| parse "data/day14.data.txt")
