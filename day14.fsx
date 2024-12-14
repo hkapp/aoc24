@@ -59,15 +59,7 @@ let simulateAll world robots =
         printf "%i " i
         robots
         |> Seq.map (simulate world i))
-
-let findWhere world robots predicate =
-    simulateAll world robots
     |> SeqUtils.zipWithIndex
-    |> Seq.choose (fun (i, sim) ->
-        if predicate (Set.ofSeq sim) then
-            Some i
-        else
-            None)
 
 let display world robots nSteps =
     let sep () =
@@ -88,13 +80,32 @@ let display world robots nSteps =
         printfn ""
     sep ()
 
-let matchFrame s =
-    s
-    |> Set.exists (fun p ->
-        [0..10]
-        |> List.forall (fun i ->
-            (Set.contains (fst p, (snd p) + i) s) &&
-            (Set.contains ((fst p) + i, snd p) s)))
+let statisticalAnalysis sim =
+    let state = Set.ofSeq sim
+    let neighbours (x, y) =
+        seq {
+            for i in -1 .. 1 do
+            for j in -1 .. 1 do
+            yield Set.contains (x + i, y + j) state
+        }
+        |> Array.ofSeq
+    let neighbourPatterns =
+        state
+        |> Set.toSeq
+        |> Seq.countBy neighbours
+    // For a same number of neighbors, we would expect each pattern to appear equally
+    let shouldBeEquallyLikely: (int * (int seq)) seq =
+        neighbourPatterns
+        |> Seq.groupBy (fun (pattern, c) ->
+            let nNeigh = Seq.filter id pattern |> Seq.length
+            nNeigh)
+        |> Seq.map (fun (nNeigh, indivPatterns) ->
+            (nNeigh,
+                indivPatterns
+                |> Seq.map (fun (actualPattern, patternCount) -> patternCount)))
+    shouldBeEquallyLikely
+    |> Seq.map (fun (nNeigh, counts) -> (Seq.max counts) - (Seq.min counts))
+    |> Seq.max
 
 (*
   x->
@@ -104,8 +115,9 @@ v
 *)
 let part2 world robots =
     let res =
-        findWhere world robots matchFrame
-        |> Seq.head
+        simulateAll world robots
+        |> Seq.maxBy (fun (i, s) -> statisticalAnalysis s)
+        |> fst
     display world robots res
     res
 
