@@ -7,34 +7,11 @@ let arr2DFindOneWithPos predicate arr =
 
 let findGuard = arr2DFindOneWithPos ((=) '^')
 
-(*  Y=0 ->
-X=0
- |
- v
- *)
-let moveUnchecked (x, y) dir =
-    match dir with
-    | '^' -> (x-1, y)
-    | '>' -> (x, y+1)
-    | 'v' -> (x+1, y)
-    | '<' -> (x, y-1)
-
-let arr2DGetSafe arr (x, y) =
-    if Grid.withinBounds arr (x, y) then
-        Some <| Array2D.get arr x y
-    else
-        None
-
-let rotate dir =
-    match dir with
-    | '^' -> '>'
-    | '>' -> 'v'
-    | 'v' -> '<'
-    | '<' -> '^'
+let rotate = Grid.rotateRight
 
 let rec moveGuard grid currPos dir =
-    let unchechedNewPos = moveUnchecked currPos dir
-    match arr2DGetSafe grid unchechedNewPos with
+    let unchechedNewPos = Grid.moveUnchecked currPos dir
+    match Grid.getSafe grid unchechedNewPos with
     | None ->
         // out of the grid
         None

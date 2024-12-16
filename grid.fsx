@@ -35,3 +35,38 @@ let neighbours (x, y) =
 let validNeighbours grid pos =
     neighbours pos
     |> Seq.filter (withinBounds grid)
+
+let getSafe arr (x, y) =
+    if withinBounds arr (x, y) then
+        Some <| Array2D.get arr x y
+    else
+        None
+
+(*  Y=0 ->
+X=0
+ |
+ v
+ *)
+let moveUnchecked (x, y) dir =
+    match dir with
+    | '^' -> (x-1, y)
+    | '>' -> (x, y+1)
+    | 'v' -> (x+1, y)
+    | '<' -> (x, y-1)
+
+let rotateRight dir =
+    match dir with
+    | '^' -> '>'
+    | '>' -> 'v'
+    | 'v' -> '<'
+    | '<' -> '^'
+
+let rotateLeft dir =
+    match dir with
+    | '^' -> '<'
+    | '>' -> '^'
+    | 'v' -> '>'
+    | '<' -> 'v'
+
+let manhattanDistance (x1, y1) (x2, y2) =
+    (abs (x1 - x2)) + (abs (y1 - y2))
