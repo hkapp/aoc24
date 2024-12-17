@@ -1,9 +1,13 @@
 module Grid
 
-let parse fileName =
-    System.IO.File.ReadLines fileName
+let parseLines lines =
+    lines
     |> Seq.map Seq.toArray
     |> array2D
+
+let parse fileName =
+    System.IO.File.ReadLines fileName
+    |> parseLines
 
 let indexes arr =
     seq {
@@ -23,6 +27,8 @@ let withinBounds arr (x, y) =
     && y < Array2D.length2 arr
 
 let get arr (x, y) = Array2D.get arr x y
+
+let set arr (x, y) value = Array2D.set arr x y value
 
 let neighbours (x, y) =
     seq {
@@ -70,3 +76,11 @@ let rotateLeft dir =
 
 let manhattanDistance (x1, y1) (x2, y2) =
     (abs (x1 - x2)) + (abs (y1 - y2))
+
+let lookWithIndex grid from dir =
+    Seq.unfold
+        (fun pos ->
+            getSafe grid pos
+            |> Option.map (fun x -> ((pos, x), moveUnchecked pos dir)))
+        from
+    |> Seq.tail

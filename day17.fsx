@@ -9,23 +9,6 @@ let parseRegisters lines =
     |> Seq.map (fun m -> int64 m.Groups[0].Value)
     |> Array.ofSeq
 
-//type Operand =
-//    | LitOp of int
-//    | RegOp of char
-//
-//type Opcode =
-//    | Adv | Bxl | Bst | Jnz | Bxc | Out | Bdv | Cdv
-//
-//let intoInst (opcode, opn) =
-//    let parsedOpcode =
-//        match opcode with
-//        | 0 -> Adv
-//        | 1 -> Bxl
-//        | 2 -> Bst
-//        | 3 -> Jnz
-//        | 4 -> Bxc
-//        |
-
 let parseProgram (pline: string) =
     pline[9..].Split(",")
     |> Seq.map int
