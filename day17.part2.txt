@@ -1,0 +1,69 @@
+Program: 2,4,1,1,7,5,1,4,0,3,4,5,5,5,3,0
+
+2,4
+1,1
+7,5
+1,4
+0,3
+4,5
+5,5
+3,0
+
+bst 4
+bxl 1
+cdv 5
+bxl 4
+adv 3
+bxc 5
+out 5
+jnz 3
+
+B = (combo 4) % 8
+B = B xor 1
+C = A / (2 ^ (combo 5))
+B = B xor 4
+A = A / (2 ^ (combo 3))
+B = B xor C
+print ((combo 5) % 8)
+if A = 0
+  done
+else
+  jump 0
+
+do
+{
+  B = A % 8
+  B = B xor 1
+  C = A / (2 ^ B)
+  B = B xor 0b100
+  A = A / (2 ^ 3)
+  B = B xor C
+  print (B % 8)
+} while A != 0
+
+do
+{
+  B = (A % 8) xor 1
+  C = A / (2 ^ B)
+  B = B xor 0b100
+  A = A / 8
+  B = B xor C
+  print (B % 8)
+} while A != 0
+
+do
+{
+  B = (A % 8) xor 1  // First 5 bits of B are always 1
+  C = A >> B
+  D = B xor 0b100
+  A >>= 3
+  E = D xor C
+  print (E % 8)
+} while A != 0
+
+do
+{
+  B = (A % 8) xor 1
+  print (((B xor 0b100) xor (A >> B)) % 8)
+  A >>= 3
+} while A != 0
