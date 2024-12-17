@@ -184,29 +184,28 @@ let part2 (registers: int64 array, program: (int * int) array) =
         |> String.concat ","
     printfn "Goal: %s" initStr
 
-    let rec solve prefix =
-        [0..7]
-        |> Seq.map (fun i -> (prefix <<< 3) + i)
-        |> Seq.filter
-        let mutable solution = 0
-        for i in 0 .. 7 do
-            let candidate = (prefix <<< 3) + i
-            let candStr = fast candidate
-            if initStr.EndsWith(candStr) then
-                printfn "%B: %s" candidate candStr
-                if initStr.Equals(candStr) then
-                    solution <- candidate
-                else
-                    solution <- solve candidate
-        solution
-    solve 0
-    //for i in 0..1024 do
-    //    let resStr = fast i
-    //    if initStr.EndsWith(resStr) then
-    //        printfn "%B: %s" i resStr
+    let rec solve n =
+        let resStr = fast n
+        if resStr.Length = initStr.Length then
+            if resStr.Equals(initStr) then
+                printfn "%B: %s" n resStr
+                seq { n }
+            else
+                Seq.empty
+        else
+            if initStr.EndsWith(resStr) then
+                printfn "%B: %s" n resStr
+                [0..7]
+                |> Seq.map (fun i -> (n <<< 3) + (int64 i))
+                |> Seq.collect solve
+            else
+                Seq.empty
+    [1..7]
+    |> Seq.map int64
+    |> Seq.collect solve
+    |> Seq.min
 
 printfn "%A" (parse "data/day17.test.txt")
 printfn "%A" (part1 <| parse "data/day17.test.txt")
 printfn "%A" (part1 <| parse "data/day17.data.txt")
-// printfn "%A" (part2 <| parse "data/day17.test.txt")
 printfn "%A" (part2 <| parse "data/day17.data.txt")
