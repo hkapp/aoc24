@@ -7,6 +7,8 @@ let parse fileName =
         |> SeqUtils.splitWhere ((=) "")
     (Grid.parseLines gridLines, Seq.collect id moveLines)
 
+let isWideCrate c = (c = '[') || (c = ']')
+
 let applyMove grid currPos dir =
     let ahead = Grid.lookWithIndex grid currPos dir
     let nextPos = fst (Seq.head ahead)
@@ -23,6 +25,45 @@ let applyMove grid currPos dir =
         |> Option.map (fun (openSpot, c) ->
             Grid.set grid nextPos '.'
             Grid.set grid openSpot 'O')
+    let rec moveWideCratesVertically mass =
+        let completeCrates =
+            mass
+            |> Array.collect (fun pos ->
+                let companionDir =
+                    match Grid.get grid pos with
+                    | ']' -> '<'
+                    | '[' -> '>'
+                let companionPos = Grid.moveUnchecked pos companionDir
+                [| pos ; companionPos |])
+            |> Array.distinct
+        // If any crate is blocked by a wall, nothing can move
+        // Otherwise, if any crate is blocked by another crate, we need to try moving those crates
+        let anyBlockedBy tiles =
+            completeCrates
+            |> Array.exists (fun pos ->
+                let nextTile =
+                    Grid.moveUnchecked pos dir
+                    |> Grid.get grid
+                Set.contains nextTile tiles)
+        let moveVertically () =
+            completeCrates
+            |> Array.iter (fun pos ->
+                let prevEmpty = Grid.moveUnchecked pos dir
+                Grid.set grid prevEmpty (Grid.get grid pos)
+                Grid.set grid pos '.')
+        if anyBlockedBy (Set.singleton '#') then
+            None
+        else if anyBlockedBy (Set.ofList ['[' ; ']']) then
+            // Get the next row and try again
+            completeCrates
+            |> Array.map (fun pos -> Grid.moveUnchecked pos dir)
+            |> Array.filter (fun pos -> isWideCrate <| Grid.get grid pos)
+            |> moveWideCratesVertically
+            |> Option.map moveVertically
+        else
+            // We're simply free to move
+            moveVertically ()
+            Some ()
     match Seq.head ahead |> snd with
     | '#' -> currPos
     | '.' ->
@@ -31,6 +72,11 @@ let applyMove grid currPos dir =
         moveCrates ()
         |> Option.map moveRobot
         |> Option.defaultValue currPos
+    | ']' | '[' ->
+        moveWideCrates [| nextPos |]
+        |> Option.map moveRobot
+        |> Option.defaultValue currPos
+
 
 let run grid moves =
     let mutable currPos =
