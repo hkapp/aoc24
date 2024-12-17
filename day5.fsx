@@ -1,8 +1,5 @@
 #load "arrayutils.fsx"
-
-let splitWhere predicate s =
-    let idx = Seq.findIndex predicate s
-    (Seq.take idx s, Seq.skip (idx+1) s)
+#load "sequtils.fsx"
 
 let parseOrdRules raw =
     raw
@@ -24,7 +21,7 @@ let parseUpdates raw =
 let parse fileName =
     let (rawOrdRules, rawUpdates) =
         System.IO.File.ReadLines fileName
-        |> splitWhere ((=) "")
+        |> SeqUtils.splitWhere ((=) "")
     (parseOrdRules rawOrdRules, parseUpdates rawUpdates)
 
 let correctlyOrdered ordRules update =

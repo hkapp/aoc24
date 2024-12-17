@@ -15,3 +15,12 @@ let nonOverlappingWindows n s =
     |> filteri (fun i v -> (i % n) = 0)
 
 let product s = Seq.fold (*) 1 s
+
+
+let splitWhere predicate s =
+    let idx = Seq.findIndex predicate s
+    (Seq.take idx s, Seq.skip (idx+1) s)
+
+let pairwiseNoOverlap s =
+    Seq.pairwise s
+    |> filteri (fun i v -> (i % 2) = 0)
