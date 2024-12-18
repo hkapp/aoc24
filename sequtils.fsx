@@ -1,8 +1,6 @@
 module SeqUtils
 
-let zipWithIndex s =
-    s
-    |> Seq.mapi (fun i x -> (i, x))
+let zipWithIndex = Seq.indexed
 
 let filteri f s =
     s
