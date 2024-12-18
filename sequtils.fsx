@@ -16,7 +16,6 @@ let nonOverlappingWindows n s =
 
 let product s = Seq.fold (*) 1 s
 
-
 let splitWhere predicate s =
     let idx = Seq.findIndex predicate s
     (Seq.take idx s, Seq.skip (idx+1) s)
