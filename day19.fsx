@@ -27,8 +27,28 @@ let part1 (available, desired) =
     |> Seq.filter (canSolve available)
     |> Seq.length
 
+let rec allSolutions (available: string array) s =
+    if s = "" then
+        Seq.singleton ()  // nobody asked to remember the solution
+    else
+        available
+        |> Seq.choose (fun prefix ->
+            if s.StartsWith(prefix) then
+                Some (s[prefix.Length..])
+            else
+                None)
+        |> Seq.collect (allSolutions available)
+
+let part2 (available, desired) =
+    desired
+    |> Seq.map (fun x ->
+        printf "."
+        x)
+    |> Seq.collect (allSolutions available)
+    |> Seq.length
+
 printfn "%A" (parse "data/day19.test.txt")
 printfn "%A" (part1 <| parse "data/day19.test.txt")
 printfn "%A" (part1 <| parse "data/day19.data.txt")
-//printfn "%A" (part2 7 12 <| parse "data/day19.test.txt")
-//printfn "%A" (part2 71 1024 <| parse "data/day19.data.txt")
+printfn "%A" (part2 <| parse "data/day19.test.txt")
+printfn "%A" (part2 <| parse "data/day19.data.txt")
