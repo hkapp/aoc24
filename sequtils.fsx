@@ -21,3 +21,10 @@ let splitWhere predicate s =
 let pairwiseNoOverlap s =
     Seq.pairwise s
     |> filteri (fun i v -> (i % 2) = 0)
+
+let inspect s =
+    Seq.map
+        (fun x ->
+            printfn "%A" x
+            x)
+        s
