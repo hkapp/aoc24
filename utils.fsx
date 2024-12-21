@@ -12,3 +12,5 @@ let integers =
         0
 
 let bimap f (a, b) = (f a, f b)
+
+let fst3 (a, b, c) = a

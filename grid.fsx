@@ -84,3 +84,10 @@ let lookWithIndex grid from dir =
             |> Option.map (fun x -> ((pos, x), moveUnchecked pos dir)))
         from
     |> Seq.tail
+
+let findTile predicate grid =
+    grid
+    |> enumerate
+    |> Seq.filter (fun (pos, t) -> predicate t)
+    |> Seq.exactlyOne
+    |> fst

@@ -12,7 +12,7 @@ let walkable grid currPos =
     |> Seq.filter (fun newPos -> (Grid.get grid newPos) = (currHeight + 1))
 
 let hike grid startPos =
-    Algorithms.bfs (walkable grid) startPos
+    Algorithms.dfs (walkable grid) startPos
 
 let trailScore grid trailhead =
     hike grid trailhead

@@ -25,7 +25,7 @@ let regions garden =
         if MutSet.contains allVisited pos then
             None
         else
-            Some (Set.ofSeq <| Algorithms.bfs neighbours pos))
+            Some (Set.ofSeq <| Algorithms.dfs neighbours pos))
 
 let area region = Set.count region
 
