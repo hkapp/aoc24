@@ -28,3 +28,8 @@ let inspect s =
             printfn "%A" x
             x)
         s
+
+let collectChars s =
+    s
+    |> Seq.map string
+    |> String.concat ""

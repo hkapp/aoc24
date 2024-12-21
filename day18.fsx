@@ -1,5 +1,6 @@
 #load "grid.fsx"
 #load "algos.fsx"
+#load "utils.fsx"
 
 let parse fileName =
     System.IO.File.ReadLines fileName
@@ -45,8 +46,6 @@ let part1 width nbytes blocks =
     |> List.length
     |> (fun len -> len - 1)
 
-let swap (x, y) = (y, x)
-
 let part2 width nbytes blocks =
     [nbytes..((Seq.length blocks) - 1)]
     |> Seq.find (fun i ->
@@ -54,7 +53,7 @@ let part2 width nbytes blocks =
         |> Option.isNone)
     |> (fun i ->
         Seq.item (i-1) blocks
-        |> swap)
+        |> Utils.swap)
 
 printfn "%A" (part1 7 12 <| parse "data/day18.test.txt")
 printfn "%A" (part1 71 1024 <| parse "data/day18.data.txt")
