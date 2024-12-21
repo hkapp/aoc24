@@ -33,16 +33,27 @@ let displayHops hops =
         | None -> ".")
     |> printfn "%A"
 
-let cheat grid pos =
-    let moves1 =
-        Grid.validNeighbours grid pos
-        |> Seq.filter (fun newPos -> (Grid.get grid newPos) = '#')
-    let moves2 =
-        moves1
-        |> Seq.collect (validMovesNoCheat grid)
-    moves2
+let radius n p =
+    let (x, y) = p
+    seq {
+        for i in -n .. n do
+        for j in -n .. n do
+        let q = (x + i, y + j)
+        if Grid.manhattanDistance p q <= n then
+            yield q
+    }
 
-let part1Shared grid =
+// Note: this function will return non cheats
+// Considering that these won't be saving any time, it doesn't matter
+let cheat nCheat grid pos =
+    // A cheat of length n can reach any valid tile
+    // whose manhattan distance is less than n away
+    radius nCheat pos
+    |> Seq.filter (Grid.withinBounds grid)
+    |> Seq.filter (fun newPos -> (Grid.get grid newPos) <> '#')
+    |> Seq.map (fun newPos -> (newPos, Grid.manhattanDistance pos newPos))
+
+let cheatSaves allowedCheats grid =
     let start = Grid.findTile ((=) 'S') grid
     let goal = Grid.findTile ((=) 'E') grid
     let hopsFromStart = hopDistance grid start
@@ -53,23 +64,23 @@ let part1Shared grid =
     |> Grid.enumerate
     |> Seq.choose (fun (p, d) -> d |> Option.map (fun dist -> (p, dist)))
     |> Seq.collect (fun (p, d) ->
-        cheat grid p
-        |> Seq.map (fun q -> d + 2 + (Grid.get hopsToEnd q |> Option.get)))
+        cheat allowedCheats grid p
+        |> Seq.map (fun (q, cheatLen) -> d + cheatLen + (Grid.get hopsToEnd q |> Option.get)))
     |> Seq.map (fun d -> noCheatLen - d)
     |> Seq.filter (fun save -> save > 0)
 
-let part1Test grid =
-    part1Shared grid
+let test n grid =
+    cheatSaves n grid
     |> Seq.countBy id
     |> List.ofSeq
     |> List.sortBy fst
 
-let part1Real grid =
-    part1Shared grid
+let real n grid =
+    cheatSaves n grid
     |> Seq.filter (fun save -> save >= 100)
     |> Seq.length
 
-printfn "%A" (part1Test <| parse "data/day20.test.txt")
-printfn "%A" (part1Real <| parse "data/day20.data.txt")
-// printfn "%A" (part2 <| parse "data/day20.test.txt")
-// printfn "%A" (part2 <| parse "data/day20.data.txt")
+printfn "%A" (test 2 <| parse "data/day20.test.txt")
+printfn "%A" (real 2 <| parse "data/day20.data.txt")
+printfn "%A" (test 20 <| parse "data/day20.test.txt")
+printfn "%A" (real 20 <| parse "data/day20.data.txt")
