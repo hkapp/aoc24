@@ -2,6 +2,8 @@
 #load "utils.fsx"
 #load "sequtils.fsx"
 
+let parse = System.IO.File.ReadLines
+
 // The forbidden character
 let fc = ' '
 
@@ -27,7 +29,6 @@ let keymap1 = mapify keypad1
 let keymap2 = mapify keypad2
 
 let sub (x1, y1) (x2, y2) = (x1 - x2, y1 - y2)
-
 
 let buildAll (mv: int * int) =
     (*
@@ -64,9 +65,13 @@ let buildAll (mv: int * int) =
     |> List.map (SeqUtils.collectChars)
     |> List.distinct
 
-let neverPanic keypad rep =
+let neverPanic (keypad, keymap) startPos rep =
     rep
-    |> Seq.map (fun c -> Map.find c keymap2)
+    |> Seq.takeWhile ((<>) 'A')
+    |> Seq.scan
+        (fun prevPos dir ->
+            Grid.moveUnchecked prevPos dir)
+        startPos
     |> Seq.forall (fun p -> (Grid.get keypad p) <> fc)
 
 let validReps (keypad, keymap) (prev, next) =
@@ -74,7 +79,7 @@ let validReps (keypad, keymap) (prev, next) =
     let nextPos = Map.find next keymap
     let mv = sub nextPos prevPos
     buildAll mv
-    |> Seq.filter (neverPanic keypad)
+    |> Seq.filter (neverPanic (keypad, keymap) prevPos)
 
 let rec combineAlts (alts: 'a seq list) : 'a list seq =
     match alts with
@@ -104,16 +109,30 @@ let convertAll world keys =
 let world1 = (keypad1, keymap1)
 let world2 = (keypad2, keymap2)
 
-let part1 input =
+let fullEncoding input =
     convertAll world1 input
     |> keepShortestOnly
     |> Seq.collect (convertAll world2)
     |> keepShortestOnly
     |> Seq.collect (convertAll world2)
     |> keepShortestOnly
-    //|> Seq.map (fun s -> s.Length)
-    //|> Seq.distinct
-    //|> Seq.exactlyOne
+
+let shortestEncodingLength input =
+    fullEncoding input
+    |> Seq.map (fun s -> s.Length)
+    |> Seq.distinct
+    |> Seq.exactlyOne
+
+let numericPart (input: string) = int (input[..((input.Length)-2)])
+
+let part1 inputCodes =
+    let complexity input =
+        let len = shortestEncodingLength input
+        let num = numericPart input
+        num * len
+    inputCodes
+    |> Seq.map complexity
+    |> Seq.sum
 
 let validate (expected: string) (found: string seq) =
     let foundLens = found |> Seq.map (fun s -> s.Length) |> Seq.distinct
@@ -152,49 +171,37 @@ validate "v<<A>>^A<A>AvA<^AA>A<vAAA>^A" s2
 let s3 = s2 |> Seq.collect (convertAll world2)
 validate "<vA<AA>>^AvAA<^A>A<v<A>>^AvA^A<vA>^A<v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A" s3
 
-validate "<v<A>>^AAAvA^A<vA<AA>>^AvAA<^A>A<v<A>A>^AAAvA<^A>A<vA>^A<A>A" (part1 "980A")
-validate "<v<A>>^A<vA<A>>^AAvAA<^A>A<v<A>>^AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A" (part1 "179A")
-validate "<v<A>>^AA<vA<A>>^AAvAA<^A>A<vA>^A<A>A<vA>^A<A>A<v<A>A>^AAvA<^A>A" (part1 "456A")
-validate "<v<A>>^AvA^A<vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A" (part1 "379A")
+validate "<v<A>>^AAAvA^A<vA<AA>>^AvAA<^A>A<v<A>A>^AAAvA<^A>A<vA>^A<A>A" (fullEncoding "980A")
+validate "<v<A>>^A<vA<A>>^AAvAA<^A>A<v<A>>^AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A" (fullEncoding "179A")
+validate "<v<A>>^AA<vA<A>>^AAvAA<^A>A<vA>^A<A>A<vA>^A<A>A<v<A>A>^AAvA<^A>A" (fullEncoding "456A")
+validate "<v<A>>^AvA^A<vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A" (fullEncoding "379A")
 
-//let evaluate keypad input =
-//    input
-//    |> Seq.scan
-//        (fun (pos, out) c ->
-//            match c with
-//            | 'A' -> (pos, Some (Grid.get keypad pos))
-//            | _ -> (Grid.moveUnchecked pos c, None))
-//        ((Grid.findTile ((=) 'A') keypad), None)
-//    |> Seq.map snd
-//    |> Seq.choose id
-//    |> SeqUtils.collectChars
-//
-//let d2 = evaluate keypad2 "<v<A>>^AvA^A<vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A"
-//let b0 = "379A"
-//let b1 = convert keymap1 b0
-//let b2 = convert keymap2 b1
-//validate d2 b2
-//
-//let d1 = evaluate keypad2 d2
-//validate d1 b1
-//
-//let reverseEngineer lowLevel (highLevel: string) =
-//    let lowPairs = Seq.pairwise (Seq.append (Seq.singleton 'A') lowLevel)
-//    let highRep = highLevel.Split("A")
-//    Seq.zip lowPairs highRep
-//    |> Seq.groupBy fst
-//    |> Seq.map (fun (lowPair, reps) -> (lowPair, reps |> Seq.map snd))
-//    |> Seq.filter (fun (lowPair, reps) -> (Seq.length reps) > 1)
-//    |> Seq.filter (fun (lowPair, reps) -> Seq.exists (fun r -> (Seq.length r) > 1) reps)
-//    |> List.ofSeq
-//
-//printfn "%A" (reverseEngineer d1 d2)
-//printfn "%A" (reverseEngineer "<A^A>^^AvvvA" "v<<A>>^A<A>AvA<^AA>A<vAAA>^A")
-//printfn "%A" (reverseEngineer "v<<A>>^A<A>AvA<^AA>A<vAAA>^A" "<vA<AA>>^AvAA<^A>A<v<A>>^AvA^A<vA>^A<v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A")
-//printfn "%A" (reverseEngineer d2 "<v<A>>^AvA^A<vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A")
-//
-//printfn "%A" (part1 "029A")
-// printfn "%A" (part1 <| parse "data/day21.test.txt")
-// printfn "%A" (real 2 <| parse "data/day21.data.txt")
+printfn "%A" (buildAll <| sub (Map.find '<' keymap2) (Map.find 'A' keymap2))
+printfn "%A" (validReps world2 ('A', '<'))
+
+let evaluate keypad input =
+    input
+    |> Seq.scan
+        (fun (pos, out) c ->
+            match c with
+            | 'A' -> (pos, Some (Grid.get keypad pos))
+            | _ -> (Grid.moveUnchecked pos c, None))
+        ((Grid.findTile ((=) 'A') keypad), None)
+    |> Seq.map snd
+    |> Seq.choose id
+    |> SeqUtils.collectChars
+
+let d2 = evaluate keypad2 "<v<A>>^AvA^A<vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A"
+let b0 = "379A"
+let b1 = convertAll world1 b0
+let b2 = b1 |> Seq.collect (convertAll world2)
+validate d2 b2
+
+let d1 = evaluate keypad2 d2
+validate d1 b1
+
+printfn "%A" (shortestEncodingLength "029A")
+printfn "%A" (part1 <| parse "data/day21.test.txt")
+printfn "%A" (part1 <| parse "data/day21.data.txt")
 // printfn "%A" (test 20 <| parse "data/day21.test.txt")
 // printfn "%A" (real 20 <| parse "data/day21.data.txt")
