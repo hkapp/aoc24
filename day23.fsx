@@ -1,18 +1,10 @@
+#load "utils.fsx"
+
 let parse fileName =
     System.IO.File.ReadLines fileName
     |> Seq.map (fun l ->
         match l.Split("-") with
         | [|a ; b|] -> (a, b))
-
-let assignIds conns =
-    let ids =
-        conns
-        |> Seq.map (fun (a, b) -> [ a ; b ])
-        |> Seq.collect Seq.ofList
-        |> Seq.distinct
-        |> Array.ofSeq
-    Array.sortInPlace ids
-    ids
 
 let validStart (s: string) = s.StartsWith("t")
 
@@ -59,7 +51,54 @@ let part1 rawConns =
     |> Seq.collect (triangles graph)
     |> Seq.length
 
+let arrayScanBack folder init arr =
+    Array.scanBack folder arr init
+
+let arrayFoldBack folder init arr =
+    Array.foldBack folder arr init
+
+let isClique graph vertices =
+    seq {
+        for i in 0 .. (Array.length vertices - 1) do
+        for j in (i+1) .. (Array.length vertices - 1) do
+        yield (vertices[i], vertices[j])
+    }
+    |> Seq.forall (edgeExists graph)
+
+let part2 rawConns =
+    let graph =
+        rawConns
+        |> Seq.map sortEdge
+        |> buildGraph
+    rawConns
+    |> Seq.collect (fun (a, b) -> List.toSeq [a ; b])
+    |> Seq.distinct
+    |> Array.ofSeq
+    |> Array.sortWith (fun a b ->
+        let initEdge = (a, b)
+        let sortedEdge = sortEdge initEdge
+        if initEdge = sortedEdge then
+            -1
+        else
+            1)
+    |> arrayFoldBack
+        (fun (node: string) (knownCliques: Map<string, string array array>) ->
+            Map.tryFind node graph
+            |> Option.defaultValue Array.empty
+            |> Array.collect (fun neigh -> Map.find neigh knownCliques)
+            |> Array.append (Array.singleton Array.empty)
+            |> Array.map (Array.append (Array.singleton node))
+            |> Array.filter (isClique graph)
+            |> (fun newCliques -> Map.add node newCliques knownCliques))
+        Map.empty
+    |> Map.values
+    |> Array.ofSeq
+    |> Array.collect id
+    |> Array.maxBy Array.length
+    |> Array.sort
+    |> String.concat ","
+
 printfn "%A" (part1 <| parse "data/day23.test.txt")
 printfn "%A" (part1 <| parse "data/day23.data.txt")
-//printfn "%A" (part2 <| parse "data/day23.test2.txt")
-//printfn "%A" (part2 <| parse "data/day23.data.txt")
+printfn "%A" (part2 <| parse "data/day23.test.txt")
+printfn "%A" (part2 <| parse "data/day23.data.txt")

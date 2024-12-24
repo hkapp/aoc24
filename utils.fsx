@@ -16,3 +16,7 @@ let bimap f (a, b) = (f a, f b)
 let fst3 (a, b, c) = a
 
 let swap (x, y) = (y, x)
+
+let inspect x =
+    printfn "%A" x
+    x
